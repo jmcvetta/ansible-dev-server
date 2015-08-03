@@ -1,0 +1,76 @@
+# vim:ft=ansible:
+
+- hosts: all
+  sudo: yes
+
+  vars:
+
+    # Admin users to create
+    genericusers_users:
+      - name: jason
+        ssh_keys:
+          - "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+        system: yes
+        groups: [admin, staff, sudo]
+        shell: /bin/bash
+
+    # Additional utility packagesto be installed by ANXS.utilities role
+    utilities_extras:
+      - vim
+      - git
+
+  pre_tasks:
+
+    - name: Ensure /etc/sudoers is configured for Git checkout with forwarded SSH agent
+      lineinfile:
+        dest: /etc/sudoers
+        line: Defaults    env_keep += "SSH_AUTH_SOCK"
+        state: present
+        validate: visudo -cf %s
+
+    - name: Ensure sudo group can use sudo without password
+      lineinfile: 
+        dest: /etc/sudoers 
+        state: present 
+        regexp: '^%sudo' 
+        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+        validate: visudo -cf %s
+
+    - name: Upgrade packages
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    - name: Check if reboot is required
+      stat:
+        path: /var/run/reboot-required
+      register: stat
+
+    - name: Reboot host
+      command: shutdown -r now "Ansible updates triggered"
+      # Hang up immediately after issuing reboot command
+      async: 0
+      poll: 0
+      when: stat.stat.exists
+
+    - name: Wait for host to be ready
+      sudo: no
+      connection: local
+      local_action: wait_for host="{{ inventory_hostname }}" port=22
+
+  roles:
+    - ANXS.hostname
+    - ANXS.utilities
+    - ANXS.generic-users
+    - ANXS.monit
+
+  tasks:
+  
+    - name: Ensure Ansible PPA is added
+      apt_repository:
+        repo: "ppa:ansible/ansible"
+
+    - name: Ensure Ansible is installed
+      apt:
+        name: ansible
+        update_cache: yes
