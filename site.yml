@@ -73,4 +73,14 @@
     - name: Ensure Ansible is installed
       apt:
         name: ansible
-        update_cache: yes
+
+    - name: Ensure ~jason/.gitconfig is present
+      copy:
+        src: ~/.gitconfig
+        dest: ~jason/.gitconfig
+        owner: jason
+
+    - name: Ensure ~jason/.bashrc contains "set -o vi"
+      lineinfile:
+        dest: ~jason/.bashrc
+        line: set -o vi
