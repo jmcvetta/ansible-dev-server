@@ -1,4 +1,7 @@
-ANXS.monit
 ANXS.generic-users
 ANXS.utilities
 ANXS.hostname
+jason.mcvetta.sudoers-forwarded-ssh
+jason.mcvetta.debian-upgrade-reboot
+geerlingguy.security
+geerlingguy.firewall
