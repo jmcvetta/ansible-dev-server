@@ -1,5 +1,5 @@
-Ansible playbook to deploy an Ansible control server
-=========================================================
+Ansible playbook to deploy a developent server
+==============================================
 
 Requirements
 ------------
